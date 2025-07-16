@@ -1,26 +1,55 @@
-import React from 'react';
-import logo from './logo.svg';
-import './App.css';
+import React, { useState } from 'react';
+import { AppProvider, useApp } from './context/AppContext';
+import { HomePage } from './pages/HomePage';
+import { GeneratorPage } from './pages/GeneratorPage';
+import { StrengthCheckPage } from './pages/StrengthCheckPage';
+import { BreachCheckPage } from './pages/BreachCheckPage';
+import { SavedPasswordsPage } from './pages/SavedPasswordsPage';
+import { Toast } from './components/layout/Toast';
 
-function App() {
+const AppContent: React.FC = () => {
+  const [currentPage, setCurrentPage] = useState('home');
+  const { toast } = useApp();
+
+  const handleNavigate = (page: string) => {
+    setCurrentPage(page);
+  };
+
+  const hideToast = () => {
+    // Toast will auto-hide, but we need this for the component
+  };
+
+  const renderPage = () => {
+    switch (currentPage) {
+      case 'home':
+        return <HomePage onNavigate={handleNavigate} />;
+      case 'generator':
+        return <GeneratorPage onNavigate={handleNavigate} />;
+      case 'strength':
+        return <StrengthCheckPage onNavigate={handleNavigate} />;
+      case 'breach':
+        return <BreachCheckPage onNavigate={handleNavigate} />;
+      case 'saved':
+        return <SavedPasswordsPage onNavigate={handleNavigate} />;
+      default:
+        return <HomePage onNavigate={handleNavigate} />;
+    }
+  };
+
   return (
-    <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.tsx</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
-    </div>
+    <>
+      {renderPage()}
+      {toast && <Toast toast={toast} onClose={hideToast} />}
+    </>
   );
-}
+};
+
+const App: React.FC = () => {
+  return (
+    <AppProvider>
+      <AppContent />
+    </AppProvider>
+  );
+};
 
 export default App;
