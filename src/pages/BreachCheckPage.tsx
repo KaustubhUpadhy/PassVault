@@ -4,15 +4,14 @@ import { Header } from '../components/layout/Header';
 import { Card } from '../components/ui/Card';
 import { Input } from '../components/ui/Input';
 import { Button } from '../components/ui/Button';
-import { useApp } from '../context/AppContext';
 
 interface BreachCheckPageProps {
   onNavigate: (page: string) => void;
+  showToast: (message: string, type?: 'success' | 'error' | 'info') => void;
 }
 
-export const BreachCheckPage: React.FC<BreachCheckPageProps> = ({ onNavigate }) => {
+export const BreachCheckPage: React.FC<BreachCheckPageProps> = ({ onNavigate, showToast }) => {
   const [password, setPassword] = useState('');
-  const { showToast } = useApp();
 
   const handleCheckBreach = () => {
     if (!password) {
@@ -24,7 +23,7 @@ export const BreachCheckPage: React.FC<BreachCheckPageProps> = ({ onNavigate }) 
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900">
-      <Header title="Breach Check" showBack onBack={() => onNavigate('home')} />
+      <Header title="Breach Check" showBack onBack={() => onNavigate('home')} onNavigate={onNavigate} />
 
       <main className="container mx-auto px-6 py-12 max-w-2xl">
         <div className="text-center mb-8">

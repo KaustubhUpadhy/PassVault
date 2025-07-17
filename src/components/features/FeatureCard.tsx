@@ -14,7 +14,6 @@ export const FeatureCard: React.FC<FeatureCardProps> = ({
   description, 
   onClick 
 }) => {
-  // Define specific colors for each feature
   const getIconColor = () => {
     switch (title) {
       case 'Password Generator':

@@ -3,14 +3,14 @@ import { Database, Plus } from 'lucide-react';
 import { Header } from '../components/layout/Header';
 import { Card } from '../components/ui/Card';
 import { Button } from '../components/ui/Button';
-import { useApp } from '../context/AppContext';
 
 interface SavedPasswordsPageProps {
   onNavigate: (page: string) => void;
+  showToast: (message: string, type?: 'success' | 'error' | 'info') => void;
 }
 
-export const SavedPasswordsPage: React.FC<SavedPasswordsPageProps> = ({ onNavigate }) => {
-  const { savedPasswords, showToast } = useApp();
+export const SavedPasswordsPage: React.FC<SavedPasswordsPageProps> = ({ onNavigate, showToast }) => {
+  const savedPasswords: any[] = []; // Empty for now
 
   const handleAddPassword = () => {
     showToast("Password saving will be implemented with Supabase backend!", "info");
@@ -18,7 +18,7 @@ export const SavedPasswordsPage: React.FC<SavedPasswordsPageProps> = ({ onNaviga
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900">
-      <Header title="Saved Passwords" showBack onBack={() => onNavigate('home')} />
+      <Header title="Saved Passwords" showBack onBack={() => onNavigate('home')} onNavigate={onNavigate} />
 
       <main className="container mx-auto px-6 py-12 max-w-4xl">
         <div className="text-center mb-8">

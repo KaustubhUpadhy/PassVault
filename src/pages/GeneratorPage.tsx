@@ -7,16 +7,15 @@ import { Checkbox } from '../components/ui/Checkbox';
 import { PasswordInput } from '../components/features/PasswordInput';
 import { usePasswordSettings } from '../hooks/usePasswordSettings';
 import { useClipboard } from '../hooks/useClipboard';
-import { useApp } from '../context/AppContext';
 
 interface GeneratorPageProps {
   onNavigate: (page: string) => void;
+  showToast: (message: string, type?: 'success' | 'error' | 'info') => void;
 }
 
-export const GeneratorPage: React.FC<GeneratorPageProps> = ({ onNavigate }) => {
+export const GeneratorPage: React.FC<GeneratorPageProps> = ({ onNavigate, showToast }) => {
   const { settings, updateSettings } = usePasswordSettings();
-  const { copied, copyToClipboard } = useClipboard();
-  const { showToast } = useApp();
+  const { copied, copyToClipboard } = useClipboard(showToast);
   const defaultPassword = "Temp@123Pass!";
   const defaultStrength = { strength: 75, label: "Strong", color: "text-green-400" };
 
@@ -26,7 +25,7 @@ export const GeneratorPage: React.FC<GeneratorPageProps> = ({ onNavigate }) => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900">
-      <Header title="Password Generator" showBack onBack={() => onNavigate('home')} />
+      <Header title="Password Generator" showBack onBack={() => onNavigate('home')} onNavigate={onNavigate} />
 
       <main className="container mx-auto px-6 py-12 max-w-2xl">
         <div className="text-center mb-8">

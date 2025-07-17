@@ -1,9 +1,7 @@
 import { useState } from 'react';
-import { useApp } from '../context/AppContext';
 
-export const useClipboard = () => {
+export const useClipboard = (showToast: (message: string, type?: 'success' | 'error' | 'info') => void) => {
   const [copied, setCopied] = useState(false);
-  const { showToast } = useApp();
 
   const copyToClipboard = async (text: string) => {
     try {
