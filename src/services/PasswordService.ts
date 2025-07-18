@@ -1,26 +1,68 @@
-import { PasswordSettings, SavedPassword } from '../types';
+const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:8000';
 
 export class PasswordService {
-  static async generatePassword(settings: PasswordSettings): Promise<string> {
-    // TODO: Implement with backend endpoint
+  static async checkStrength(
+    password: string, 
+    firstName?: string, 
+    lastName?: string, 
+    email?: string
+  ): Promise<{
+    score: number;
+    strength_label: string;
+    online_crack_time: string;
+    offline_crack_time: string;
+    warning: string;
+    suggestions: string[];
+  }> {
+    const response = await fetch(`${API_BASE_URL}/api/security/strength`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        password,
+        first_name: firstName,
+        last_name: lastName,
+        email: email,
+      }),
+    });
+
+    if (!response.ok) {
+      throw new Error('Failed to check password strength');
+    }
+
+    return response.json();
+  }
+
+  static async checkBreach(password: string): Promise<{
+    is_breached: boolean;
+    breach_count: number;
+    message: string;
+  }> {
+    const response = await fetch(`${API_BASE_URL}/api/security/breach`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        password,
+      }),
+    });
+
+    if (!response.ok) {
+      throw new Error('Failed to check password breach');
+    }
+
+    return response.json();
+  }
+
+  // Keep existing methods...
+  static async generatePassword(settings: any): Promise<string> {
     await new Promise(resolve => setTimeout(resolve, 500));
     return "GeneratedPass123!";
   }
 
-  static async checkStrength(password: string): Promise<{ score: number; feedback: string[] }> {
-    // TODO: Implement with zxcvbn backend endpoint
-    await new Promise(resolve => setTimeout(resolve, 300));
-    return { score: 75, feedback: ["Good password strength"] };
-  }
-
-  static async checkBreach(password: string): Promise<{ isBreached: boolean; count: number }> {
-    // TODO: Implement with HaveIBeenPwned backend endpoint
-    await new Promise(resolve => setTimeout(resolve, 500));
-    return { isBreached: false, count: 0 };
-  }
-
-  static async savePassword(passwordData: Omit<SavedPassword, 'id' | 'createdAt'>): Promise<SavedPassword> {
-    // TODO: Implement with Supabase backend
+  static async savePassword(passwordData: any): Promise<any> {
     await new Promise(resolve => setTimeout(resolve, 500));
     return {
       id: Date.now().toString(),
@@ -29,8 +71,7 @@ export class PasswordService {
     };
   }
 
-  static async getSavedPasswords(): Promise<SavedPassword[]> {
-    // TODO: Implement with Supabase backend
+  static async getSavedPasswords(): Promise<any[]> {
     await new Promise(resolve => setTimeout(resolve, 300));
     return [];
   }

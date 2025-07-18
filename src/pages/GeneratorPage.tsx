@@ -111,7 +111,7 @@ export const GeneratorPage: React.FC<GeneratorPageProps> = ({ onNavigate, showTo
             <li>• Include a mix of uppercase, lowercase, numbers, and symbols</li>
             <li>• Use unique passwords for each account</li>
             <li>• Never share your passwords with others</li>
-            <li>• Consider using a password manager</li>
+            <li>• Use our password manager to securely save your passwords.</li>
           </ul>
         </Card>
       </main>

@@ -11,6 +11,7 @@ interface InputProps {
   id?: string;
   name?: string;
   autoComplete?: string;
+  onKeyPress?: (e: React.KeyboardEvent<HTMLInputElement>) => void;  // Add this line
 }
 
 export const Input: React.FC<InputProps> = ({
@@ -24,6 +25,7 @@ export const Input: React.FC<InputProps> = ({
   id,
   name,
   autoComplete,
+  onKeyPress,  // Add this line
 }) => {
   return (
     <input
@@ -32,6 +34,7 @@ export const Input: React.FC<InputProps> = ({
       name={name}
       value={value}
       onChange={onChange}
+      onKeyPress={onKeyPress}  // Add this line
       placeholder={placeholder}
       disabled={disabled}
       required={required}
