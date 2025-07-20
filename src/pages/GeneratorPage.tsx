@@ -1,12 +1,14 @@
-import React from 'react';
-import { RefreshCw } from 'lucide-react';
+import React, { useState } from 'react';
+import { RefreshCw, Loader } from 'lucide-react';
 import { Header } from '../components/layout/Header';
 import { Card } from '../components/ui/Card';
 import { Slider } from '../components/ui/Slider';
 import { Checkbox } from '../components/ui/Checkbox';
 import { PasswordInput } from '../components/features/PasswordInput';
+import { EntropyDisplay } from '../components/features/EntropyDisplay';
 import { usePasswordSettings } from '../hooks/usePasswordSettings';
 import { useClipboard } from '../hooks/useClipboard';
+import { PasswordService } from '../services/PasswordService';
 
 interface GeneratorPageProps {
   onNavigate: (page: string) => void;
@@ -16,11 +18,36 @@ interface GeneratorPageProps {
 export const GeneratorPage: React.FC<GeneratorPageProps> = ({ onNavigate, showToast }) => {
   const { settings, updateSettings } = usePasswordSettings();
   const { copied, copyToClipboard } = useClipboard(showToast);
-  const defaultPassword = "Temp@123Pass!";
-  const defaultStrength = { strength: 75, label: "Strong", color: "text-green-400" };
+  const [password, setPassword] = useState('');
+  const [entropy, setEntropy] = useState(0);
+  const [isGenerating, setIsGenerating] = useState(false);
 
-  const handleGenerate = () => {
-    showToast("Password generation will be implemented with backend!", "info");
+  const handleGenerate = async () => {
+    if (!settings.includeUppercase && !settings.includeLowercase && 
+        !settings.includeNumbers && !settings.includeSymbols) {
+      showToast("Please select at least one character type", "error");
+      return;
+    }
+
+    setIsGenerating(true);
+    try {
+      const result = await PasswordService.generatePassword({
+        length: settings.length,
+        include_uppercase: settings.includeUppercase,
+        include_lowercase: settings.includeLowercase,
+        include_numbers: settings.includeNumbers,
+        include_symbols: settings.includeSymbols,
+      });
+      
+      setPassword(result.password);
+      setEntropy(result.entropy_bits);
+      showToast("Password generated successfully!", "success");
+    } catch (error) {
+      showToast("Failed to generate password", "error");
+      console.error('Password generation error:', error);
+    } finally {
+      setIsGenerating(false);
+    }
   };
 
   return (
@@ -34,37 +61,34 @@ export const GeneratorPage: React.FC<GeneratorPageProps> = ({ onNavigate, showTo
         </div>
 
         <Card className="space-y-6">
-          <div className="space-y-2">
+          {/* Generated Password Display */}
+          <div className="space-y-4">
             <label className="text-sm font-medium text-purple-200">Generated Password</label>
             <PasswordInput
-              value={defaultPassword}
+              value={password}
               placeholder="Click generate to create a password"
               readOnly
               showCopyButton
-              onCopy={() => copyToClipboard(defaultPassword)}
+              onCopy={() => copyToClipboard(password)}
               copied={copied}
             />
-            <div className="flex items-center space-x-2">
-              <div className="flex-1 bg-purple-800 rounded-full h-2">
-                <div
-                  className="h-2 rounded-full transition-all duration-300 bg-green-500"
-                  style={{ width: `${defaultStrength.strength}%` }}
-                />
-              </div>
-              <span className={`text-sm font-medium ${defaultStrength.color}`}>
-                {defaultStrength.label}
-              </span>
-            </div>
+            
+            {/* Entropy Display */}
+            {password && entropy > 0 && (
+              <EntropyDisplay entropy={entropy} />
+            )}
           </div>
 
+          {/* Password Length */}
           <Slider
             value={settings.length}
             onChange={(length) => updateSettings({ length })}
-            min={4}
+            min={12}
             max={50}
             label="Length"
           />
 
+          {/* Character Options */}
           <div className="space-y-4">
             <label className="text-sm font-medium text-purple-200">Include Characters</label>
             <div className="grid grid-cols-2 gap-4">
@@ -95,15 +119,27 @@ export const GeneratorPage: React.FC<GeneratorPageProps> = ({ onNavigate, showTo
             </div>
           </div>
 
+          {/* Generate Button */}
           <button
             onClick={handleGenerate}
-            className="w-full bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white py-3 text-lg rounded-xl transition-all duration-300 transform hover:scale-[1.02] shadow-lg hover:shadow-xl border-none cursor-pointer flex items-center justify-center space-x-2"
+            disabled={isGenerating}
+            className="w-full bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 disabled:opacity-50 disabled:cursor-not-allowed text-white py-3 text-lg rounded-xl transition-all duration-300 transform hover:scale-[1.02] shadow-lg hover:shadow-xl border-none cursor-pointer flex items-center justify-center space-x-2"
           >
-            <RefreshCw className="h-5 w-5" />
-            <span>Generate Password (Coming Soon)</span>
+            {isGenerating ? (
+              <>
+                <Loader className="h-5 w-5 animate-spin" />
+                <span>Generating...</span>
+              </>
+            ) : (
+              <>
+                <RefreshCw className="h-5 w-5" />
+                <span>Generate Password</span>
+              </>
+            )}
           </button>
         </Card>
 
+        {/* Security Tips */}
         <Card className="mt-8 bg-purple-900/20">
           <h3 className="text-white text-lg font-semibold mb-4">Security Tips</h3>
           <ul className="space-y-2 text-sm text-purple-300">
@@ -111,7 +147,7 @@ export const GeneratorPage: React.FC<GeneratorPageProps> = ({ onNavigate, showTo
             <li>• Include a mix of uppercase, lowercase, numbers, and symbols</li>
             <li>• Use unique passwords for each account</li>
             <li>• Never share your passwords with others</li>
-            <li>• Use our password manager to securely save your passwords.</li>
+            <li>• Consider using a password manager</li>
           </ul>
         </Card>
       </main>

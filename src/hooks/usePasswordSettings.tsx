@@ -1,5 +1,12 @@
 import { useState } from 'react';
-import { PasswordSettings } from '../types';
+
+export interface PasswordSettings {
+  length: number;
+  includeUppercase: boolean;
+  includeLowercase: boolean;
+  includeNumbers: boolean;
+  includeSymbols: boolean;
+}
 
 export const usePasswordSettings = () => {
   const [settings, setSettings] = useState<PasswordSettings>({

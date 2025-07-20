@@ -1,6 +1,37 @@
 const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:8000';
 
 export class PasswordService {
+  static async generatePassword(settings: {
+    length: number;
+    include_uppercase: boolean;
+    include_lowercase: boolean;
+    include_numbers: boolean;
+    include_symbols: boolean;
+  }): Promise<{
+    password: string;
+    entropy_bits: number;
+  }> {
+    const response = await fetch(`${API_BASE_URL}/api/security/generate`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        length: settings.length,
+        include_uppercase: settings.include_uppercase,
+        include_lowercase: settings.include_lowercase,
+        include_numbers: settings.include_numbers,
+        include_symbols: settings.include_symbols,
+      }),
+    });
+
+    if (!response.ok) {
+      throw new Error('Failed to generate password');
+    }
+
+    return response.json();
+  }
+
   static async checkStrength(
     password: string, 
     firstName?: string, 
@@ -56,12 +87,7 @@ export class PasswordService {
     return response.json();
   }
 
-  // Keep existing methods...
-  static async generatePassword(settings: any): Promise<string> {
-    await new Promise(resolve => setTimeout(resolve, 500));
-    return "GeneratedPass123!";
-  }
-
+  // Keep existing methods for backward compatibility
   static async savePassword(passwordData: any): Promise<any> {
     await new Promise(resolve => setTimeout(resolve, 500));
     return {
