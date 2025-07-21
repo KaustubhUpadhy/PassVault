@@ -47,20 +47,14 @@ export const ProfileMenu: React.FC = () => {
       </button>
 
       {isOpen && (
-        <div className="absolute right-0 mt-2 w-56 bg-purple-900/95 backdrop-blur-sm border border-purple-700 rounded-lg shadow-xl z-50">
+        <div className="absolute right-0 mt-2 w-72 bg-purple-900/95 backdrop-blur-sm border border-purple-700 rounded-lg shadow-xl z-50">
           <div className="p-4 border-b border-purple-700">
-            <p className="font-medium text-white">{user.name}</p>
-            <p className="text-sm text-purple-300">{user.email}</p>
+            <p className="font-medium text-white truncate">{user.name}</p>
+            <p className="text-sm text-purple-300 break-all">{user.email}</p>
           </div>
           
           <div className="p-2">
-            <button
-              onClick={() => {/* TODO: Add profile settings */}}
-              className="w-full flex items-center space-x-2 px-3 py-2 text-purple-300 hover:text-white hover:bg-purple-800 rounded-lg transition-colors bg-transparent border-none cursor-pointer"
-            >
-              <Settings className="h-4 w-4" />
-              <span>Settings</span>
-            </button>
+
             
             <button
               onClick={handleSignOut}

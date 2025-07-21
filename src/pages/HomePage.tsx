@@ -26,7 +26,7 @@ export const HomePage: React.FC<HomePageProps> = ({ onNavigate }) => {
       <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 flex flex-col">
         <Header onNavigate={onNavigate} />
 
-        <main className="flex-1 flex items-center justify-center px-6">
+        <main className="flex-1 flex flex-col items-center justify-center px-6">
           <div className="text-center max-w-6xl mx-auto">
             <div className="mb-12">
               <h1 className="text-6xl md:text-8xl font-bold mb-6">
@@ -43,25 +43,25 @@ export const HomePage: React.FC<HomePageProps> = ({ onNavigate }) => {
                 icon={Key}
                 title="Password Generator"
                 description="Generate strong, secure passwords with custom options"
-                onClick={() => onNavigate('generator')}
+                onClick={isAuthenticated ? () => onNavigate('generator') : () => handleAuthClick('signup')}
               />
               <FeatureCard
                 icon={Shield}
                 title="Strength Check"
                 description="Analyze password strength using advanced algorithms"
-                onClick={() => onNavigate('strength')}
+                onClick={isAuthenticated ? () => onNavigate('strength') : () => handleAuthClick('signup')}
               />
               <FeatureCard
                 icon={Eye}
                 title="Breach Check"
                 description="Check if your password has been compromised in data breaches"
-                onClick={() => onNavigate('breach')}
+                onClick={isAuthenticated ? () => onNavigate('breach') : () => handleAuthClick('signup')}
               />
               <FeatureCard
                 icon={Database}
                 title="Saved Passwords"
                 description="Manage your encrypted passwords stored in the cloud"
-                onClick={() => onNavigate('saved')}
+                onClick={isAuthenticated ? () => onNavigate('saved') : () => handleAuthClick('signup')}
               />
             </div>
 
@@ -75,6 +75,35 @@ export const HomePage: React.FC<HomePageProps> = ({ onNavigate }) => {
                 </Button>
               </div>
             )}
+
+            <div className="mt-20 mb-16 max-w-4xl mx-auto">
+              <h2 className="text-3xl font-bold text-white text-center mb-12">
+                Enterprise-Grade Security Features
+              </h2>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+                <div className="text-center">
+                  <div className="w-16 h-16 bg-gradient-to-r from-purple-600 to-pink-600 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <Shield className="h-8 w-8 text-white" />
+                  </div>
+                  <h3 className="text-xl font-semibold text-white mb-2">Client-Side Encryption</h3>
+                  <p className="text-purple-300">Your passwords are encrypted on your device before being stored</p>
+                </div>
+                <div className="text-center">
+                  <div className="w-16 h-16 bg-gradient-to-r from-blue-600 to-purple-600 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <Key className="h-8 w-8 text-white" />
+                  </div>
+                  <h3 className="text-xl font-semibold text-white mb-2">Zero-Knowledge Architecture</h3>
+                  <p className="text-purple-300">We cannot see your passwords even if we wanted to</p>
+                </div>
+                <div className="text-center">
+                  <div className="w-16 h-16 bg-gradient-to-r from-green-600 to-blue-600 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <Database className="h-8 w-8 text-white" />
+                  </div>
+                  <h3 className="text-xl font-semibold text-white mb-2">Secure Cloud Sync</h3>
+                  <p className="text-purple-300">Access your encrypted vault from anywhere, anytime</p>
+                </div>
+              </div>
+            </div>
           </div>
         </main>
 
