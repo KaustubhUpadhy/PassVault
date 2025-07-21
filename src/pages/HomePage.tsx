@@ -26,7 +26,7 @@ export const HomePage: React.FC<HomePageProps> = ({ onNavigate }) => {
       <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 flex flex-col">
         <Header onNavigate={onNavigate} />
 
-        <main className="flex-1 flex flex-col items-center justify-center px-6">
+        <main className="flex-1 flex flex-col items-center justify-center px-6 pt-16">
           <div className="text-center max-w-6xl mx-auto">
             <div className="mb-12">
               <h1 className="text-6xl md:text-8xl font-bold mb-6">
