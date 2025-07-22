@@ -9,6 +9,8 @@ interface AuthContextType extends AuthState {
   signInWithGoogle: () => Promise<{ error: any }>;
   signInWithGitHub: () => Promise<{ error: any }>;
   signOut: () => Promise<void>;
+  resetPassword: (email: string) => Promise<{ error: any }>;
+  updatePassword: (password: string) => Promise<{ error: any }>;
   showToast: (message: string, type?: 'success' | 'error' | 'info') => void;
 }
 
@@ -170,6 +172,44 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children, onToast })
     }
   };
 
+  const resetPassword = async (email: string) => {
+    try {
+      const { error } = await supabase.auth.resetPasswordForEmail(email, {
+        redirectTo: `${window.location.origin}/auth/reset-password`,
+      });
+
+      if (error) {
+        onToast(error.message, 'error');
+        return { error };
+      }
+
+      onToast('Check your email for password reset instructions!', 'success');
+      return { error: null };
+    } catch (error: any) {
+      onToast('Password reset failed', 'error');
+      return { error };
+    }
+  };
+
+  const updatePassword = async (password: string) => {
+    try {
+      const { error } = await supabase.auth.updateUser({
+        password: password,
+      });
+
+      if (error) {
+        onToast(error.message, 'error');
+        return { error };
+      }
+
+      onToast('Password updated successfully!', 'success');
+      return { error: null };
+    } catch (error: any) {
+      onToast('Password update failed', 'error');
+      return { error };
+    }
+  };
+
   const value: AuthContextType = {
     user,
     isLoading,
@@ -179,6 +219,8 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children, onToast })
     signInWithGoogle,
     signInWithGitHub,
     signOut,
+    resetPassword,
+    updatePassword,
     showToast: onToast,
   };
 

@@ -3,6 +3,7 @@ import { X, Mail, Lock, User, Github } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { Button } from '../ui/Button';
 import { Input } from '../ui/Input';
+import { ForgotPasswordModal } from './ForgotPasswordModal';
 
 interface AuthModalProps {
   isOpen: boolean;
@@ -16,6 +17,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
   initialMode = 'signup' 
 }) => {
   const [mode, setMode] = useState<'signin' | 'signup'>(initialMode);
+  const [showForgotPassword, setShowForgotPassword] = useState(false);
   const [formData, setFormData] = useState({
     name: '',
     email: '',
@@ -73,6 +75,30 @@ export const AuthModal: React.FC<AuthModalProps> = ({
     setMode(mode === 'signin' ? 'signup' : 'signin');
     resetForm();
   };
+
+  const handleForgotPasswordClick = () => {
+    setShowForgotPassword(true);
+  };
+
+  const handleBackToLogin = () => {
+    setShowForgotPassword(false);
+    setMode('signin');
+  };
+
+  const handleCloseForgotPassword = () => {
+    setShowForgotPassword(false);
+  };
+
+  // Show Forgot Password Modal
+  if (showForgotPassword) {
+    return (
+      <ForgotPasswordModal
+        isOpen={showForgotPassword}
+        onClose={handleCloseForgotPassword}
+        onBackToLogin={handleBackToLogin}
+      />
+    );
+  }
 
   return (
     <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
@@ -160,6 +186,18 @@ export const AuthModal: React.FC<AuthModalProps> = ({
             }
           </Button>
         </form>
+
+        {/* Forgot Password Link - Only show in signin mode */}
+        {mode === 'signin' && (
+          <div className="mt-4 text-center">
+            <button
+              onClick={handleForgotPasswordClick}
+              className="text-purple-400 hover:text-purple-300 text-sm font-medium bg-transparent border-none cursor-pointer transition-colors"
+            >
+              Forgot password?
+            </button>
+          </div>
+        )}
 
         {/* Divider */}
         <div className="my-8 flex items-center">

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { HomePage } from './pages/HomePage';
 import { GeneratorPage } from './pages/GeneratorPage';
@@ -6,6 +6,8 @@ import { StrengthCheckPage } from './pages/StrengthCheckPage';
 import { BreachCheckPage } from './pages/BreachCheckPage';
 import { SavedPasswordsPage } from './pages/SavedPasswordsPage';
 import { AboutPage } from './pages/AboutPage';
+import { ResetPasswordPage } from './pages/ResetPasswordPage';
+import { AuthCallback } from './pages/AuthCallback';
 import { Toast } from './components/layout/Toast';
 import { AuthModal } from './components/auth/AuthModal';
 
@@ -20,6 +22,31 @@ const AppContent: React.FC = () => {
   const [showAuthModal, setShowAuthModal] = useState(false);
   const { isAuthenticated } = useAuth();
 
+  // Check for special routes on component mount
+  useEffect(() => {
+    const path = window.location.pathname;
+    const search = window.location.search;
+    
+    // Handle password reset route
+    if (path === '/auth/reset-password') {
+      setCurrentPage('reset-password');
+      return;
+    }
+    
+    // Handle auth callback route  
+    if (path === '/auth/callback') {
+      setCurrentPage('auth-callback');
+      return;
+    }
+
+    // Check URL parameters for errors (from OAuth redirects)
+    const urlParams = new URLSearchParams(search);
+    const error = urlParams.get('error');
+    if (error === 'auth_failed') {
+      showToast("Authentication failed. Please try again.", "error");
+    }
+  }, []);
+
   const handleNavigate = (page: string) => {
     // Check if user is trying to access protected pages
     const protectedPages = ['generator', 'strength', 'breach', 'saved'];
@@ -32,6 +59,11 @@ const AppContent: React.FC = () => {
     }
     
     setCurrentPage(page);
+    
+    // Update browser URL for normal navigation (not special routes)
+    if (!['reset-password', 'auth-callback'].includes(page)) {
+      window.history.pushState({}, '', page === 'home' ? '/' : `/${page}`);
+    }
   };
 
   const showToast = (message: string, type: 'success' | 'error' | 'info' = 'success') => {
@@ -56,6 +88,10 @@ const AppContent: React.FC = () => {
         return <SavedPasswordsPage onNavigate={handleNavigate} showToast={showToast} />;
       case 'about':
         return <AboutPage onNavigate={handleNavigate} />;
+      case 'reset-password':
+        return <ResetPasswordPage onNavigate={handleNavigate} showToast={showToast} />;
+      case 'auth-callback':
+        return <AuthCallback />;
       default:
         return <HomePage onNavigate={handleNavigate} />;
     }
