@@ -1,11 +1,12 @@
-import React, { useState } from 'react';
-import { Database, Plus, Search, Edit, Trash2, Eye, EyeOff, Check } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { Database, Plus, Search, Edit, Trash2, Eye, EyeOff, Check, Loader2 } from 'lucide-react';
 import { Header } from '../components/layout/Header';
 import { Card } from '../components/ui/Card';
 import { SavedPasswordsTable } from '../components/features/SavedPasswordsTable';
 import { AddPasswordModal } from '../components/features/AddPasswordModal';
 import { ConfirmationModal } from '../components/features/ConfirmationModal';
-import { mockPasswords, Password } from '../data/mockPasswords';
+import { PasswordService } from '../services/PasswordService';
+import { Password } from '../config/supabase';
 
 interface SavedPasswordsPageProps {
   onNavigate: (page: string) => void;
@@ -13,7 +14,8 @@ interface SavedPasswordsPageProps {
 }
 
 export const SavedPasswordsPage: React.FC<SavedPasswordsPageProps> = ({ onNavigate, showToast }) => {
-  const [passwords, setPasswords] = useState<Password[]>(mockPasswords);
+  const [passwords, setPasswords] = useState<Password[]>([]);
+  const [loading, setLoading] = useState(false);
   const [view, setView] = useState<'search' | 'all'>('search');
   const [showAddModal, setShowAddModal] = useState(false);
   const [showConfirmModal, setShowConfirmModal] = useState(false);
@@ -25,19 +27,39 @@ export const SavedPasswordsPage: React.FC<SavedPasswordsPageProps> = ({ onNaviga
   const [editData, setEditData] = useState<{[key: string]: Password}>({});
   const [pendingAction, setPendingAction] = useState<'delete' | 'showAll' | null>(null);
 
-  const handleSearch = () => {
+  const handleSearch = async () => {
     if (!searchQuery.trim()) {
       showToast("Please enter a search term", "error");
       return;
     }
 
-    const results = passwords.filter(p => 
-      p.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      p.username.toLowerCase().includes(searchQuery.toLowerCase())
-    );
+    setLoading(true);
+    try {
+      const results = await PasswordService.searchPasswords(searchQuery);
+      setSearchResults(results);
+      showToast(`Found ${results.length} matching passwords`, "success");
+    } catch (error) {
+      showToast("Error searching passwords", "error");
+      console.error('Search error:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
-    setSearchResults(results);
-    showToast(`Found ${results.length} matching passwords`, "success");
+  const loadAllPasswords = async () => {
+    setLoading(true);
+    try {
+      const allPasswords = await PasswordService.getAllPasswords();
+      setPasswords(allPasswords);
+      setView('all');
+      setShowConfirmModal(false);
+      showToast("Showing all passwords", "info");
+    } catch (error) {
+      showToast("Error loading passwords", "error");
+      console.error('Load error:', error);
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleShowAllClick = () => {
@@ -47,38 +69,56 @@ export const SavedPasswordsPage: React.FC<SavedPasswordsPageProps> = ({ onNaviga
 
   const handleConfirmAction = () => {
     if (pendingAction === 'showAll') {
-      setView('all');
-      setShowConfirmModal(false);
-      showToast("Showing all passwords", "info");
+      loadAllPasswords();
     } else if (pendingAction === 'delete') {
+      handleDeleteConfirmed();
+    }
+    setPendingAction(null);
+  };
+
+  const handleDeleteConfirmed = async () => {
+    setLoading(true);
+    try {
+      await PasswordService.deletePasswords(Array.from(selectedIds));
+      
+      // Update local state
       const newPasswords = passwords.filter(p => !selectedIds.has(p.id));
       setPasswords(newPasswords);
       setSelectedIds(new Set());
       setShowConfirmModal(false);
       showToast(`Deleted ${selectedIds.size} passwords`, "success");
+    } catch (error) {
+      showToast("Error deleting passwords", "error");
+      console.error('Delete error:', error);
+    } finally {
+      setLoading(false);
     }
-    setPendingAction(null);
   };
 
-  const handleAddPassword = (passwordData: {
+  const handleAddPassword = async (passwordData: {
     title: string;
     username: string;
     password: string;
     notes: string;
   }) => {
-    const newPassword: Password = {
-      id: Date.now().toString(),
-      title: passwordData.title,
-      username: passwordData.username,
-      password: passwordData.password,
-      notes: passwordData.notes,
-      created_at: new Date().toISOString(),
-      updated_at: new Date().toISOString()
-    };
+    setLoading(true);
+    try {
+      const newPassword = await PasswordService.addPassword({
+        title: passwordData.title,
+        username: passwordData.username,
+        password: passwordData.password,
+        notes: passwordData.notes
+      });
 
-    setPasswords([...passwords, newPassword]);
-    setShowAddModal(false);
-    showToast("Password added successfully!", "success");
+      setPasswords(prev => [newPassword, ...prev]);
+      setShowAddModal(false);
+      showToast("Password added successfully!", "success");
+    } catch (error) {
+      showToast("Error adding password", "error");
+      console.error('Add error:', error);
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleSelectAll = (checked: boolean) => {
@@ -117,19 +157,37 @@ export const SavedPasswordsPage: React.FC<SavedPasswordsPageProps> = ({ onNaviga
     setEditMode(true);
   };
 
-  const handleSaveEdits = () => {
-    const updatedPasswords = passwords.map(p => {
-      if (editData[p.id]) {
-        return { ...editData[p.id], updated_at: new Date().toISOString() };
-      }
-      return p;
-    });
-    
-    setPasswords(updatedPasswords);
-    setEditMode(false);
-    setEditData({});
-    setSelectedIds(new Set());
-    showToast("Changes saved successfully!", "success");
+  const handleSaveEdits = async () => {
+    setLoading(true);
+    try {
+      const updates = await Promise.all(
+        Object.entries(editData).map(([id, passwordData]) =>
+          PasswordService.updatePassword(id, {
+            title: passwordData.title,
+            username: passwordData.username,
+            password: passwordData.password,
+            notes: passwordData.notes
+          })
+        )
+      );
+
+      // Update local state with the updated passwords
+      const updatedPasswords = passwords.map(p => {
+        const updated = updates.find(u => u.id === p.id);
+        return updated || p;
+      });
+
+      setPasswords(updatedPasswords);
+      setEditMode(false);
+      setEditData({});
+      setSelectedIds(new Set());
+      showToast("Changes saved successfully!", "success");
+    } catch (error) {
+      showToast("Error saving changes", "error");
+      console.error('Save error:', error);
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleDeleteClick = () => {
@@ -167,6 +225,14 @@ export const SavedPasswordsPage: React.FC<SavedPasswordsPageProps> = ({ onNaviga
     }
   };
 
+  // Loading component
+  const LoadingSpinner = () => (
+    <div className="flex items-center justify-center py-8">
+      <Loader2 className="h-8 w-8 text-purple-400 animate-spin" />
+      <span className="ml-2 text-purple-300">Loading...</span>
+    </div>
+  );
+
   // Search View
   if (view === 'search') {
     return (
@@ -183,7 +249,8 @@ export const SavedPasswordsPage: React.FC<SavedPasswordsPageProps> = ({ onNaviga
           <div className="flex justify-end mb-6">
             <button
               onClick={() => setShowAddModal(true)}
-              className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white px-4 py-2 rounded-lg transition-all duration-300 border-none cursor-pointer flex items-center space-x-2"
+              disabled={loading}
+              className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 disabled:opacity-50 disabled:cursor-not-allowed text-white px-4 py-2 rounded-lg transition-all duration-300 border-none cursor-pointer flex items-center space-x-2"
             >
               <Plus className="h-4 w-4" />
               <span>Add Password</span>
@@ -201,28 +268,34 @@ export const SavedPasswordsPage: React.FC<SavedPasswordsPageProps> = ({ onNaviga
                   onChange={(e) => setSearchQuery(e.target.value)}
                   placeholder="Search by service name or username..."
                   className="w-full bg-purple-950/50 border border-purple-700 text-white pl-10 pr-4 py-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-600 placeholder-purple-400"
-                  onKeyPress={(e) => e.key === 'Enter' && handleSearch()}
+                  onKeyPress={(e) => e.key === 'Enter' && !loading && handleSearch()}
+                  disabled={loading}
                 />
               </div>
               <button
                 onClick={handleSearch}
-                className="bg-purple-700 hover:bg-purple-600 text-white px-6 py-2 rounded-lg transition-colors border-none cursor-pointer flex items-center space-x-2"
+                disabled={loading}
+                className="bg-purple-700 hover:bg-purple-600 disabled:opacity-50 disabled:cursor-not-allowed text-white px-6 py-2 rounded-lg transition-colors border-none cursor-pointer flex items-center space-x-2"
               >
-                <Search className="h-4 w-4" />
+                {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Search className="h-4 w-4" />}
                 <span>Search</span>
               </button>
             </div>
 
             <button
               onClick={handleShowAllClick}
-              className="w-full bg-blue-700 hover:bg-blue-600 text-white py-2 rounded-lg transition-colors border-none cursor-pointer"
+              disabled={loading}
+              className="w-full bg-blue-700 hover:bg-blue-600 disabled:opacity-50 disabled:cursor-not-allowed text-white py-2 rounded-lg transition-colors border-none cursor-pointer"
             >
               Show All Passwords
             </button>
           </Card>
 
+          {/* Loading State */}
+          {loading && <LoadingSpinner />}
+
           {/* Search Results */}
-          {searchResults.length > 0 && (
+          {!loading && searchResults.length > 0 && (
             <Card>
               <h3 className="text-white text-lg font-semibold mb-4">Search Results ({searchResults.length})</h3>
               <div className="space-y-3">
@@ -245,7 +318,7 @@ export const SavedPasswordsPage: React.FC<SavedPasswordsPageProps> = ({ onNaviga
             </Card>
           )}
 
-          {searchResults.length === 0 && searchQuery && (
+          {!loading && searchResults.length === 0 && searchQuery && (
             <Card className="text-center py-12">
               <Database className="h-16 w-16 text-purple-400 mx-auto mb-4 opacity-50" />
               <h3 className="text-lg font-medium text-white mb-2">No Results Found</h3>
@@ -263,7 +336,7 @@ export const SavedPasswordsPage: React.FC<SavedPasswordsPageProps> = ({ onNaviga
         <ConfirmationModal
           isOpen={showConfirmModal && pendingAction === 'showAll'}
           title="Show All Passwords?"
-          message="This will display your entire password vault. Passwords will be encrypted for security."
+          message="This will display your entire password vault. Passwords are encrypted and secure."
           onConfirm={handleConfirmAction}
           onCancel={() => setShowConfirmModal(false)}
         />
@@ -294,14 +367,16 @@ export const SavedPasswordsPage: React.FC<SavedPasswordsPageProps> = ({ onNaviga
             <>
               <button
                 onClick={handleSaveEdits}
-                className="bg-green-600 hover:bg-green-500 text-white px-4 py-2 rounded-lg transition-colors border-none cursor-pointer flex items-center space-x-2"
+                disabled={loading}
+                className="bg-green-600 hover:bg-green-500 disabled:opacity-50 disabled:cursor-not-allowed text-white px-4 py-2 rounded-lg transition-colors border-none cursor-pointer flex items-center space-x-2"
               >
-                <Check className="h-4 w-4" />
+                {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Check className="h-4 w-4" />}
                 <span>Save Changes</span>
               </button>
               <button
                 onClick={() => {setEditMode(false); setEditData({}); setSelectedIds(new Set());}}
-                className="bg-gray-600 hover:bg-gray-500 text-white px-4 py-2 rounded-lg transition-colors border-none cursor-pointer"
+                disabled={loading}
+                className="bg-gray-600 hover:bg-gray-500 disabled:opacity-50 disabled:cursor-not-allowed text-white px-4 py-2 rounded-lg transition-colors border-none cursor-pointer"
               >
                 Cancel
               </button>
@@ -310,21 +385,24 @@ export const SavedPasswordsPage: React.FC<SavedPasswordsPageProps> = ({ onNaviga
             <>
               <button
                 onClick={handleEditMode}
-                className="bg-blue-600 hover:bg-blue-500 text-white px-4 py-2 rounded-lg transition-colors border-none cursor-pointer flex items-center space-x-2"
+                disabled={loading}
+                className="bg-blue-600 hover:bg-blue-500 disabled:opacity-50 disabled:cursor-not-allowed text-white px-4 py-2 rounded-lg transition-colors border-none cursor-pointer flex items-center space-x-2"
               >
                 <Edit className="h-4 w-4" />
                 <span>Edit</span>
               </button>
               <button
                 onClick={handleDeleteClick}
-                className="bg-red-600 hover:bg-red-500 text-white px-4 py-2 rounded-lg transition-colors border-none cursor-pointer flex items-center space-x-2"
+                disabled={loading}
+                className="bg-red-600 hover:bg-red-500 disabled:opacity-50 disabled:cursor-not-allowed text-white px-4 py-2 rounded-lg transition-colors border-none cursor-pointer flex items-center space-x-2"
               >
                 <Trash2 className="h-4 w-4" />
                 <span>Delete</span>
               </button>
               <button
                 onClick={handleShowPasswordsToggle}
-                className="bg-purple-600 hover:bg-purple-500 text-white px-4 py-2 rounded-lg transition-colors border-none cursor-pointer flex items-center space-x-2"
+                disabled={loading}
+                className="bg-purple-600 hover:bg-purple-500 disabled:opacity-50 disabled:cursor-not-allowed text-white px-4 py-2 rounded-lg transition-colors border-none cursor-pointer flex items-center space-x-2"
               >
                 {showPasswords.size > 0 ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                 <span>Show/Hide</span>
@@ -335,17 +413,21 @@ export const SavedPasswordsPage: React.FC<SavedPasswordsPageProps> = ({ onNaviga
       </header>
 
       <main className="container mx-auto px-6 py-6 max-w-7xl">
-        <SavedPasswordsTable
-          passwords={passwords}
-          selectedIds={selectedIds}
-          showPasswords={showPasswords}
-          editMode={editMode}
-          editData={editData}
-          onSelectPassword={handleSelectPassword}
-          onSelectAll={handleSelectAll}
-          onEditDataChange={setEditData}
-          onCopyToClipboard={copyToClipboard}
-        />
+        {loading ? (
+          <LoadingSpinner />
+        ) : (
+          <SavedPasswordsTable
+            passwords={passwords}
+            selectedIds={selectedIds}
+            showPasswords={showPasswords}
+            editMode={editMode}
+            editData={editData}
+            onSelectPassword={handleSelectPassword}
+            onSelectAll={handleSelectAll}
+            onEditDataChange={setEditData}
+            onCopyToClipboard={copyToClipboard}
+          />
+        )}
 
         {/* Instructions */}
         <Card className="mt-6 bg-blue-900/30 border border-blue-600">
@@ -356,6 +438,7 @@ export const SavedPasswordsPage: React.FC<SavedPasswordsPageProps> = ({ onNaviga
             <li>• <strong>Delete:</strong> Remove selected entries permanently</li>
             <li>• <strong>Show/Hide:</strong> Toggle password visibility for selected entries</li>
             <li>• Use individual copy buttons to copy usernames or passwords</li>
+            <li>• 🔐 All passwords are encrypted and stored securely</li>
           </ul>
         </Card>
       </main>
