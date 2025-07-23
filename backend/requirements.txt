@@ -1,7 +1,8 @@
-fastapi==0.104.1
-uvicorn[standard]==0.24.0
-pydantic==2.5.0
-pydantic-settings==2.1.0
+fastapi==0.109.0
+uvicorn[standard]==0.27.0
+pydantic==2.6.0
+pydantic-settings==2.2.0
 requests==2.32.3
-zxcvbn==4.5.0
-python-multipart==0.0.6
+zxcvbn==4.4.28
+python-multipart==0.0.9
+python-dotenv==1.0.1
