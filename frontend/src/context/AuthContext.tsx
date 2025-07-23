@@ -1,7 +1,6 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { supabase } from '../lib/supabase';
 import { User, AuthState, SignUpData, SignInData } from '../types/auth';
-import { Session } from '@supabase/supabase-js';
 
 interface AuthContextType extends AuthState {
   signUp: (data: SignUpData) => Promise<{ error: any }>;

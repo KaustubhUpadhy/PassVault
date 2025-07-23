@@ -1,5 +1,5 @@
 import React from 'react';
-import { Copy, Eye, EyeOff } from 'lucide-react';
+import { Copy} from 'lucide-react';
 
 interface Password {
   id: string;
