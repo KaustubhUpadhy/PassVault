@@ -1,7 +1,7 @@
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
-from app.config import settings
-from app.routers import security
+from config import settings  # Since main.py is in app/ and config.py is in app/
+from routers import security  # Since main.py is in app/ and routers/ is in app/
 import os
 from datetime import datetime
 
@@ -10,7 +10,7 @@ app = FastAPI(
     title="PassVault API",
     description="Secure password management and analysis API",
     version="1.0.0",
-    docs_url="/docs" if os.getenv("ENVIRONMENT") != "production" else None,  # Hide docs in prod
+    docs_url="/docs" if os.getenv("ENVIRONMENT") != "production" else None,
     redoc_url="/redoc" if os.getenv("ENVIRONMENT") != "production" else None
 )
 
@@ -44,11 +44,9 @@ async def health_check():
         "service": "PassVault API"
     }
 
-# Add a database health check endpoint
 @app.get("/api/health/db")
 async def database_health():
     try:
-        # Add any database ping here if you have one
         return {
             "status": "db_healthy",
             "timestamp": datetime.now().isoformat()
@@ -56,21 +54,18 @@ async def database_health():
     except Exception as e:
         raise HTTPException(status_code=503, detail="Database unhealthy")
 
-# Global exception handler
 @app.exception_handler(Exception)
 async def global_exception_handler(request, exc):
-    print(f"Global exception: {exc}")  # For debugging
+    print(f"Global exception: {exc}")
     return HTTPException(
         status_code=500,
         detail="An unexpected error occurred. Please try again later."
     )
 
-# Add startup event
 @app.on_event("startup")
 async def startup_event():
     print("PassVault API starting up...")
 
-# Add shutdown event  
 @app.on_event("shutdown")
 async def shutdown_event():
     print("PassVault API shutting down...")
