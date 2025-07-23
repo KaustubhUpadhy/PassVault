@@ -8,6 +8,7 @@ import { SavedPasswordsPage } from './pages/SavedPasswordsPage';
 import { AboutPage } from './pages/AboutPage';
 import { ResetPasswordPage } from './pages/ResetPasswordPage';
 import { AuthCallback } from './pages/AuthCallback';
+import { SecurityReportsPage } from './pages/SecurityReportsPage';
 import { Toast } from './components/layout/Toast';
 import { AuthModal } from './components/auth/AuthModal';
 
@@ -92,6 +93,8 @@ const AppContent: React.FC = () => {
         return <ResetPasswordPage onNavigate={handleNavigate} showToast={showToast} />;
       case 'auth-callback':
         return <AuthCallback />;
+      case 'security-reports':
+        return <SecurityReportsPage onNavigate={handleNavigate} showToast={showToast} />;
       default:
         return <HomePage onNavigate={handleNavigate} />;
     }

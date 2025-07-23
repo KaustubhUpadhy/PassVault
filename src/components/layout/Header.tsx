@@ -56,9 +56,11 @@ export const Header: React.FC<HeaderProps> = ({
                 About
               </button>
               <button
-                className="hover:text-white transition-colors bg-transparent border-none cursor-pointer">
+                onClick={() => onNavigate && onNavigate('security-reports')}
+                className="hover:text-white transition-colors bg-transparent border-none cursor-pointer"
+              >
                 Security Reports 
-              </button>{/* Security dashboard (password health, breach monitoring)opens up a seperate page on clicking run the security check button option which runs and scans all automatically */}
+              </button>
               <ProfileMenu />
             </>
           ) : (
