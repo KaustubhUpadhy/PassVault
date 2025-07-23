@@ -1,7 +1,7 @@
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
-from config import settings  # Since main.py is in app/ and config.py is in app/
-from routers import security  # Since main.py is in app/ and routers/ is in app/
+from app.config import settings  # Import from app.config since we're running from backend/
+from app.routers import security  # Import from app.routers since we're running from backend/
 import os
 from datetime import datetime
 
