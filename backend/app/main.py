@@ -28,7 +28,7 @@ app.add_middleware(
 # Include routers
 app.include_router(security.router, prefix="/api")
 
-@app.get("/",methods=["GET", "HEAD"])
+@app.api_route("/",methods=["GET", "HEAD"])
 async def root(request:Request):
     if request.method == "HEAD":
         return JSONResponse(content=None, status_code=200)
