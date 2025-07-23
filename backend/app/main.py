@@ -4,6 +4,8 @@ from app.config import settings  # Import from app.config since we're running fr
 from app.routers import security  # Import from app.routers since we're running from backend/
 import os
 from datetime import datetime
+from fastapi.responses import JSONResponse
+from fastapi import Request
 
 # Create FastAPI app
 app = FastAPI(
@@ -26,8 +28,10 @@ app.add_middleware(
 # Include routers
 app.include_router(security.router, prefix="/api")
 
-@app.get("/")
-async def root():
+@app.get("/",methods=["GET", "HEAD"])
+async def root(request:Request):
+    if request.method == "HEAD":
+        return JSONResponse(content=None, status_code=200)
     return {
         "message": "PassVault API is running",
         "version": "1.0.0",
