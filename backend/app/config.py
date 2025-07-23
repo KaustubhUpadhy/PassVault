@@ -29,9 +29,9 @@ class Settings(BaseSettings):
         # Add production URLs based on environment
         if self.environment == "production":
             production_origins = [
-                "https://your-frontend.vercel.app",  # UPDATE THIS with your actual Vercel URL
-                "https://passvault.vercel.app",      # If you use a custom domain
-                "https://passvault-frontend.vercel.app",  # Common Vercel naming
+                "https://pass-vault-five.vercel.app",  
+                "https://pass-vault-git-main-kaustubhupadhys-projects.vercel.app/",      
+                "https://pass-vault-kaustubhupadhys-projects.vercel.app",  
             ]
             self.cors_origins.extend(production_origins)
         
