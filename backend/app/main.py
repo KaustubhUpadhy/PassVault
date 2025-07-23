@@ -1,7 +1,7 @@
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
-from config import settings  # Fixed import path
-from routers import security  # Fixed import path
+from app.config import settings
+from app.routers import security
 import os
 from datetime import datetime
 
