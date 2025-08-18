@@ -39,7 +39,7 @@ PassVault combines cryptographically secure password generation, advanced breach
 
 ## 📌 Tech Stack
 - **Frontend**: React 18, TypeScript, Tailwind CSS  
-- **Backend**: Supabase (PostgreSQL + Row-Level Security), Render  
+- **Backend**: Supabase (PostgreSQL + Row-Level Security)
 - **Encryption**: AES-256-GCM, Web Crypto API  
 - **Auth**: Supabase Auth (OAuth 2.0 + JWT)  
 - **APIs**: HaveIBeenPwned (breach detection), zxcvbn (strength analysis)  
