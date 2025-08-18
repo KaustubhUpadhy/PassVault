@@ -1,7 +1,7 @@
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
-from app.config import settings  # Import from app.config since we're running from backend/
-from app.routers import security  # Import from app.routers since we're running from backend/
+from app.config import settings 
+from app.routers import security  
 import os
 from datetime import datetime
 from fastapi.responses import JSONResponse
